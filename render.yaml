@@ -3,6 +3,7 @@ services:
     name: ai-video-detection
     runtime: python
     plan: free
+    autoDeployTrigger: off
     buildCommand: pip install --upgrade pip && pip install --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple -r requirements.txt
     startCommand: uvicorn src.web_app:app --host 0.0.0.0 --port $PORT --workers 1
     healthCheckPath: /health

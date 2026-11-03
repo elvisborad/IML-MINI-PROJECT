@@ -1,5 +1,7 @@
 # AI-Generated Video Detection with Transfer Learning
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/elvisborad/IML-MINI-PROJECT/tree/main)
+
 Python project for the research question: **How effectively can transfer learning distinguish real camera-recorded videos from AI-generated videos using extracted visual frames?** It includes command-line training and evaluation plus a browser upload interface backed by a FastAPI prediction endpoint. The model samples video frames, classifies them with a pretrained ResNet-50, and aggregates frame scores into a video estimate.
 
 ## Current data and experiment status
