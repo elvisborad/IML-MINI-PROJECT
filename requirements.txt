@@ -8,3 +8,6 @@ matplotlib>=3.8,<4.0
 Pillow>=10.0,<13.0
 PyYAML>=6.0,<7.0
 tqdm>=4.66,<5.0
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.27,<1.0
+python-multipart>=0.0.9,<1.0

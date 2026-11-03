@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14213D">
+  <title>FrameCheck | AI Video Detection</title>
+  <style>
+    :root { color-scheme: light; --navy:#14213D; --teal:#0F8B8D; --ivory:#F7F5F0; --ink:#25324A; --muted:#687386; --line:#E2E6E8; --white:#fff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--ivory); color:var(--ink); font:16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    header { background:var(--navy); color:white; padding:19px max(24px,calc((100vw - 1120px)/2)); display:flex; align-items:center; gap:12px; }
+    .brand-icon { width:38px;height:38px;border:1px solid #6BC5C1;border-radius:12px;display:grid;place-items:center;color:#8FE0DA; }
+    .brand { font-weight:700;letter-spacing:.02em;font-size:17px; }
+    .brand small { display:block;font-weight:400;font-size:12px;color:#D1D9E6;letter-spacing:0; }
+    main { max-width:1120px;margin:54px auto;padding:0 24px; }
+    .eyebrow { color:var(--teal);font-size:12px;font-weight:750;text-transform:uppercase;letter-spacing:.12em; }
+    h1 { color:var(--navy);font-size:clamp(30px,4vw,44px);letter-spacing:-.04em;line-height:1.12;margin:10px 0 12px; }
+    .intro { color:var(--muted);max-width:670px;margin:0 0 32px; }
+    .layout { display:grid;grid-template-columns:minmax(0,1.25fr) minmax(290px,.75fr);gap:22px;align-items:start; }
+    .card { background:var(--white);border:1px solid var(--line);border-radius:20px;padding:26px;box-shadow:0 10px 30px #14213D0A; }
+    .card h2 { color:var(--navy);font-size:18px;margin:0 0 5px; }
+    .sub { color:var(--muted);font-size:14px;margin:0 0 19px; }
+    .drop { min-height:220px;border:1.5px dashed #A9C6C6;background:#FBFCFA;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;transition:.15s ease; }
+    .drop.drag { background:#EAF6F4;border-color:var(--teal); }
+    .upload-icon { width:50px;height:50px;border-radius:15px;background:#EAF6F4;color:var(--teal);display:grid;place-items:center;margin-bottom:12px; }
+    .drop strong { color:var(--navy); }
+    .drop p { color:var(--muted);font-size:13px;margin:4px 0 13px; }
+    input[type=file] { display:none; }
+    button,.browse { border:0;cursor:pointer;border-radius:10px;font:inherit;font-weight:650; }
+    .browse { display:inline-block;background:white;border:1px solid var(--line);padding:9px 15px;color:var(--navy); }
+    .primary { width:100%;margin-top:16px;background:var(--teal);color:white;padding:13px 18px;transition:background .15s ease; }
+    .primary:hover { background:#0B7375; }
+    button:disabled { opacity:.55;cursor:not-allowed; }
+    .file { display:none;margin-top:15px;padding:12px 14px;background:#F6F8F8;border:1px solid var(--line);border-radius:11px;align-items:center;gap:12px; }
+    .file.show { display:flex; }
+    .file-info { min-width:0;flex:1; }
+    .file-name { color:var(--navy);font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .file-size { color:var(--muted);font-size:12px; }
+    .remove { background:transparent;color:var(--muted);padding:5px 8px; }
+    .preview { display:none;width:100%;max-height:280px;background:#101828;border-radius:12px;margin-top:14px; }
+    .preview.show { display:block; }
+    .result { min-height:310px;display:flex;flex-direction:column; }
+    .placeholder { margin:auto;text-align:center;color:var(--muted);max-width:235px; }
+    .placeholder .scan { width:58px;height:58px;border:1px solid var(--line);color:#7A8996;border-radius:18px;display:grid;place-items:center;margin:0 auto 14px; }
+    .placeholder strong { display:block;color:var(--navy);margin-bottom:5px; }
+    .status { padding:11px 13px;border-radius:11px;background:#F2F5F6;color:var(--muted);font-size:13px;margin-top:15px; }
+    .status.error { background:#FFF1EE;color:#8C3D2D; }
+    .status.ok { background:#EAF6F4;color:#166668; }
+    .prediction { display:none;margin-top:20px; }
+    .prediction.show { display:block; }
+    .badge { display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;background:#EAF6F4;color:#116F71;font-size:12px;font-weight:750;letter-spacing:.04em; }
+    .badge.real { background:#EEF1F6;color:var(--navy); }
+    .prediction h3 { color:var(--navy);font-size:25px;margin:13px 0 2px; }
+    .prediction .score-caption { color:var(--muted);font-size:13px; }
+    .meter { height:8px;background:#E8ECEE;border-radius:99px;margin:13px 0 18px;overflow:hidden; }
+    .meter span { display:block;height:100%;background:var(--teal);border-radius:99px;width:0;transition:width .35s ease; }
+    .stat-row { display:flex;justify-content:space-between;border-top:1px solid var(--line);padding:10px 0;font-size:13px;gap:10px; }
+    .stat-row span:first-child { color:var(--muted); }
+    .stat-row span:last-child { color:var(--navy);font-weight:650;text-align:right; }
+    .note { margin-top:22px;color:var(--muted);font-size:12px;display:flex;gap:9px; }
+    footer { max-width:1120px;margin:0 auto 36px;padding:0 24px;color:#7A8492;font-size:12px; }
+    @media(max-width:760px) { main{margin:36px auto}.layout{grid-template-columns:1fr}.result{min-height:260px} }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after{scroll-behavior:auto!important;transition:none!important} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand-icon" aria-hidden="true">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none"><path d="M4 7V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="m10 8 5 4-5 4V8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="brand">FrameCheck<small>AI video analysis</small></div>
+  </header>
+  <main>
+    <div class="eyebrow">Video screening tool</div>
+    <h1>Check a video’s visual signal</h1>
+    <p class="intro">Upload a video to analyze sampled frames with the project’s ResNet-50 classifier. The result is an estimate, not proof of whether a video is authentic.</p>
+    <div class="layout">
+      <section class="card" aria-labelledby="upload-title">
+        <h2 id="upload-title">Analyze a video</h2>
+        <p class="sub">Choose a video file from your device. It is processed for this prediction and then discarded.</p>
+        <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose or drop a video file">
+          <div class="upload-icon" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <strong>Drop a video here</strong>
+          <p>MP4, MPEG, MOV, AVI, MKV or WEBM · up to <span id="limit-label">100</span> MB</p>
+          <label class="browse" for="video-input">Browse files</label>
+          <input id="video-input" type="file" accept="video/mp4,video/mpeg,video/quicktime,video/x-msvideo,video/x-matroska,video/webm,.mp4,.mpeg,.mpg,.mov,.avi,.mkv,.webm">
+        </div>
+        <div class="file" id="file-info"><div class="file-info"><div class="file-name" id="file-name"></div><div class="file-size" id="file-size"></div></div><button class="remove" id="remove" type="button" aria-label="Remove selected video">Remove</button></div>
+        <video class="preview" id="preview" controls playsinline></video>
+        <button class="primary" id="analyze" type="button" disabled>Analyze video</button>
+      </section>
+      <section class="card result" aria-labelledby="result-title" aria-live="polite">
+        <h2 id="result-title">Analysis result</h2>
+        <p class="sub">Your prediction and score will appear here.</p>
+        <div class="placeholder" id="placeholder"><div class="scan" aria-hidden="true"><svg width="27" height="27" viewBox="0 0 24 24" fill="none"><path d="M4 8V5a1 1 0 0 1 1-1h3m8 0h3a1 1 0 0 1 1 1v3m0 8v3a1 1 0 0 1-1 1h-3m-8 0H5a1 1 0 0 1-1-1v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg></div><strong>Ready when you are</strong>Select a video and start the analysis.</div>
+        <div class="prediction" id="prediction">
+          <div class="badge" id="badge"><span aria-hidden="true">●</span><span id="badge-label">AI_GENERATED</span></div>
+          <h3 id="prediction-label"></h3>
+          <div class="score-caption">AI-generated score (mean sampled-frame score)</div>
+          <div class="meter" aria-hidden="true"><span id="meter-fill"></span></div>
+          <div class="stat-row"><span>Decision threshold</span><span id="threshold"></span></div>
+          <div class="stat-row"><span>Frames analyzed</span><span id="frames"></span></div>
+        </div>
+        <div class="status" id="status" role="status">The model is initializing…</div>
+      </section>
+    </div>
+    <div class="note"><span aria-hidden="true">ⓘ</span><span>This small-scale pilot model can make mistakes and may not generalize to videos from unfamiliar generators, cameras, or platforms. Do not use its output as proof of authenticity.</span></div>
+  </main>
+  <footer>Video files are sent to the configured server for analysis. The application does not retain uploaded videos after prediction.</footer>
+  <script>
+    const input=document.getElementById('video-input'), drop=document.getElementById('drop'), info=document.getElementById('file-info'), preview=document.getElementById('preview'), analyze=document.getElementById('analyze'), statusBox=document.getElementById('status');
+    let selected=null, objectUrl=null;
+    function prettySize(n){return n<1024*1024?`${(n/1024).toFixed(0)} KB`:`${(n/1024/1024).toFixed(1)} MB`;}
+    function setStatus(message,kind=''){statusBox.textContent=message;statusBox.className=`status ${kind}`;}
+    function choose(file){
+      if(!file)return;
+      const allowed=/\.(mp4|mpeg|mpg|mov|avi|mkv|webm)$/i.test(file.name);
+      const maxBytes=Number(document.getElementById('limit-label').textContent)*1024*1024;
+      if(!allowed){setStatus('That file type is not supported. Choose an MP4, MPEG, MOV, AVI, MKV or WEBM video.','error');return;}
+      if(file.size>maxBytes){setStatus('This video is larger than the upload limit.','error');return;}
+      selected=file; document.getElementById('file-name').textContent=file.name;document.getElementById('file-size').textContent=prettySize(file.size);info.classList.add('show');analyze.disabled=false;
+      if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(file);preview.src=objectUrl;preview.classList.add('show');
+      document.getElementById('prediction').classList.remove('show');document.getElementById('placeholder').style.display='block';setStatus('Ready to analyze.','ok');
+    }
+    input.addEventListener('change',()=>choose(input.files[0]));
+    drop.addEventListener('click',e=>{if(e.target.closest('label'))return;input.click();});
+    drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();input.click();}});
+    for(const eventName of ['dragenter','dragover'])drop.addEventListener(eventName,e=>{e.preventDefault();drop.classList.add('drag');});
+    for(const eventName of ['dragleave','drop'])drop.addEventListener(eventName,e=>{e.preventDefault();drop.classList.remove('drag');});
+    drop.addEventListener('drop',e=>choose(e.dataTransfer.files[0]));
+    document.getElementById('remove').addEventListener('click',()=>{selected=null;input.value='';info.classList.remove('show');preview.pause();preview.removeAttribute('src');preview.load();preview.classList.remove('show');analyze.disabled=true;document.getElementById('prediction').classList.remove('show');document.getElementById('placeholder').style.display='block';setStatus('Choose a video to begin.');});
+    analyze.addEventListener('click',async()=>{
+      if(!selected)return;analyze.disabled=true;analyze.textContent='Analyzing…';setStatus('Sampling video frames and running the model…');
+      const body=new FormData();body.append('file',selected);
+      try{
+        const response=await fetch('/api/predict',{method:'POST',body});const data=await response.json();if(!response.ok)throw new Error(data.detail||'Prediction failed.');
+        const ai=data.prediction==='AI_GENERATED';document.getElementById('badge-label').textContent=data.prediction;document.getElementById('prediction-label').textContent=ai?'AI-generated signal detected':'Classified as real';document.getElementById('badge').className=`badge ${ai?'':'real'}`;
+        document.getElementById('meter-fill').style.width=`${Math.max(0,Math.min(100,data.ai_generated_score*100))}%`;document.querySelector('.score-caption').textContent=`AI-generated score: ${(data.ai_generated_score*100).toFixed(1)}% (uncalibrated model score)`;
+        document.getElementById('threshold').textContent=Number(data.decision_threshold).toFixed(4);document.getElementById('frames').textContent=data.frames_analyzed;
+        document.getElementById('prediction').classList.add('show');document.getElementById('placeholder').style.display='none';const near=Math.abs(data.ai_generated_score-data.decision_threshold)<0.05;setStatus(near?'Score is near the decision threshold; treat this result as especially uncertain.':'Analysis complete. Treat this as an estimate, not proof.','ok');
+      }catch(error){setStatus(error.message,'error');}
+      finally{analyze.disabled=false;analyze.textContent='Analyze video';}
+    });
+    async function checkHealth(){try{const r=await fetch('/health');const h=await r.json();if(h.model_loaded)setStatus('Model ready. Choose a video to begin.','ok');else setStatus('Web app is online, but its model checkpoint is not configured. Add a trusted MODEL_URL in Render settings.','error');}catch{setStatus('Could not reach the prediction service.','error');}}
+    checkHealth();
+  </script>
+</body>
+</html>

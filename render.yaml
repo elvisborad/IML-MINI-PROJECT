@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ai-video-detection
+    runtime: python
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple -r requirements.txt
+    startCommand: uvicorn src.web_app:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: MAX_UPLOAD_MB
+        value: 100
+      - key: MODEL_URL
+        sync: false

@@ -1,6 +1,6 @@
 # AI-Generated Video Detection with Transfer Learning
 
-Python command-line project for the research question: **How effectively can transfer learning distinguish real camera-recorded videos from AI-generated videos using extracted visual frames?** It samples visual frames from labeled videos, trains a pretrained ResNet50 binary classifier, selects a checkpoint using validation data, evaluates at video level on a held-out test split, and predicts new videos by averaging sampled-frame AI-generated scores.
+Python project for the research question: **How effectively can transfer learning distinguish real camera-recorded videos from AI-generated videos using extracted visual frames?** It includes command-line training and evaluation plus a browser upload interface backed by a FastAPI prediction endpoint. The model samples video frames, classifies them with a pretrained ResNet-50, and aggregates frame scores into a video estimate.
 
 ## Current data and experiment status
 
@@ -44,6 +44,14 @@ python -m src.train --config config.yaml
 python -m src.evaluate --config config.yaml
 python -m src.predict_video --video "path/to/video.mp4" --checkpoint results/models/best_model.pt
 ```
+
+## Web upload and Render deployment
+
+The project includes a browser upload page and a FastAPI prediction endpoint. To deploy it, connect this GitHub repository's `main` branch to Render as a Blueprint using the root `render.yaml` file. The Blueprint uses the free plan and a single CPU worker. Render requires web services to listen on `0.0.0.0` and its assigned `$PORT`; the supplied start command does both.
+
+The trained checkpoint is not stored in Git. Before the web page can predict, upload `results/models/best_model.pt` to a trusted HTTPS artifact host and set the Render `MODEL_URL` environment variable to its direct download URL. Treat the checkpoint as trusted input because it is a PyTorch pickle. The app downloads it at startup, holds the model in memory, limits video uploads to 100 MB, serializes inference requests, and removes uploaded videos and extracted frames after each request. The service needs outbound HTTPS access to download the checkpoint.
+
+The free Render instance has 512 MB RAM and 0.1 CPU, so ResNet-50 inference may be slow or exceed available memory. Upgrade the service only if you choose a paid plan; do not assume free-tier deployment is suitable for production. The free service may spin down when idle.
 
 Training options: `--epochs`, `--batch-size`, `--learning-rate`, and `--seed`. The config controls paths, frame sampling, image size, batch size, epochs, and worker count. The pipeline samples up to 12 frames approximately once per second by default, caches resized frames, records extraction errors, and writes per-video split manifests. Group-wise splitting requires at least three independent groups per class; each group remains in one split. Split targets are approximately 70/15/15 by video.
 

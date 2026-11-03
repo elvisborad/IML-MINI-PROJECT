@@ -1,5 +1,7 @@
 import argparse
 from pathlib import Path
+import os
+import pathlib
 import hashlib
 import statistics
 import torch
@@ -10,7 +12,17 @@ from .video_processor import extract_frames
 
 
 def load_checkpoint(path, device):
-    ckpt = torch.load(path, map_location=device, weights_only=False)
+    # Checkpoints created on Windows may contain WindowsPath objects in config.
+    # Map those metadata-only paths to a pure path class when loading on Linux.
+    if os.name == "nt":
+        ckpt = torch.load(path, map_location=device, weights_only=False)
+    else:
+        original_windows_path = pathlib.WindowsPath
+        pathlib.WindowsPath = pathlib.PureWindowsPath
+        try:
+            ckpt = torch.load(path, map_location=device, weights_only=False)
+        finally:
+            pathlib.WindowsPath = original_windows_path
     model = build_model(pretrained=False, freeze_backbone=False)
     model.load_state_dict(ckpt["state_dict"]); model.to(device).eval()
     return model, ckpt
