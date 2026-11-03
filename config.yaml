@@ -1,0 +1,20 @@
+# Place the labeled video collections in these folders before training.
+class_dirs:
+  AI_GENERATED: I2V
+  REAL:
+    - archive
+    - files
+# Optional manually verified labels for additional mixed datasets.
+# additional_manifest_csv: dataset/extra_dataset_manifest.csv
+output_dir: results
+
+image_size: 224
+frame_interval_seconds: 1.0
+max_frames: 12
+epochs: 8
+batch_size: 16
+balanced_samples_per_class: 128
+learning_rate: 0.0003
+seed: 42
+num_workers: 0
+device: auto  # auto or cpu; CUDA is selected automatically when available
